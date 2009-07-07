@@ -1,10 +1,16 @@
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\bin\Debug\iBTPC.exe
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\bin\Debug\iBTPC.pdb
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\ResolveAssemblyReference.cache
+E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.Form1.resources
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.Properties.Resources.resources
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.csproj.GenerateResource.Cache
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.exe
 E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.pdb
-E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\obj\Debug\iBTPC.mainForm.resources
-E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\bin\Debug\InTheHand.Net.Personal.dll
-E:\My Documents\Visual Studio 2008\Projects\iBTPC\iBTPC\bin\Debug\iBTPC.exe.config
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\iBTPC.exe
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\iBTPC.pdb
+G:\iBTFiles\iBTPC\iBTPC\bin\Debug\iBTPC.exe
+G:\iBTFiles\iBTPC\iBTPC\bin\Debug\iBTPC.pdb
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\ResolveAssemblyReference.cache
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\iBTPC.Form1.resources
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\iBTPC.Properties.Resources.resources
+G:\iBTFiles\iBTPC\iBTPC\obj\Debug\iBTPC.csproj.GenerateResource.Cache
