@@ -5,11 +5,9 @@ using System.Text;
 
 namespace iBTPC
 {
-    partial class ComDefs
+    public class ComDefs
     {
-        
-
-        public struct courseInfo
+         public struct courseInfo
         {
             public string name;
             public int weeks; //周数
@@ -30,9 +28,27 @@ namespace iBTPC
             public string attendence;
         }
 
-        public ComDefs()
-        { 
-        
+        // 题目
+        public struct Content
+        {
+            public string exerID;
+            public string title;
+            public string[] choice; // 若非选择题 | 讨论题，则此域为空
+        }
+
+        //答案
+        public struct Answer
+        {
+            public string exerID;
+            public string userID;
+            public string ansr;
+        }
+
+        // 消息
+        public struct Message
+        {
+            public string userID;
+            public string msg;
         }
     }
 }
