@@ -216,12 +216,15 @@ namespace iBTPC
 
             ComDefs.studentInfo sinfo = new ComDefs.studentInfo();
 
-            sinfo.stuName = "白易元";
-            sinfo.stuID = 2006013219;
+            sinfo.stuName = "杨涛";
+            sinfo.stuID = 2006013250;
             sinfo.stuClass = "软件62";
-            sinfo.attendence = "10101";
+            sinfo.attendence = "10111";
 
-            sManager.addStudent(sinfo);
+            if (!sManager.addStudent(sinfo))
+            {
+                MessageBox.Show(this, "该学生已存在，请检查输入");
+            }
         }
 #endregion
 
@@ -296,7 +299,7 @@ namespace iBTPC
                 richTextBox1.Text += "\r" + exer.title;
             }
         }
-#endregion
+    #endregion
 
 
     }
