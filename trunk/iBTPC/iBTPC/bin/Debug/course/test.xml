@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<Course>
+  <CourseInfo CourseName="test" Teacher="GuMing" Term="200901" Weeks="8" Classroom="6a103" Time="42" />
+  <StudentInfo StuCount="0">
+    <Student StuName="" StuID="-1" StuClass="" StuAttendence="">
+      <StuExercise StuExerciseID="-1" StuExerciseWeek="-1">stuAnswer</StuExercise>
+    </Student>
+  </StudentInfo>
+  <ExerciseInfo ExeCount="0">
+    <ExeChoice />
+    <ExeBlanking />
+    <ExeOpen />
+  </ExerciseInfo>
+</Course>
