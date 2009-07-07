@@ -173,6 +173,7 @@
             this.帮助ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.帮助主题ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.buttonCourse = new System.Windows.Forms.Button();
             this.label27 = new System.Windows.Forms.Label();
             this.labelCourse = new System.Windows.Forms.Label();
@@ -259,6 +260,7 @@
             this.button1.TabIndex = 0;
             this.button1.Text = "连接网络";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // groupBox3
             // 
@@ -512,6 +514,7 @@
             this.button5.TabIndex = 3;
             this.button5.Text = "发布题目";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // button4
             // 
@@ -1607,6 +1610,12 @@
             this.帮助主题ToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.帮助主题ToolStripMenuItem.Text = "帮助主题";
             // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // 关于ToolStripMenuItem
             // 
             this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
@@ -1855,6 +1864,7 @@
         private System.Windows.Forms.Button buttonCourse;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label labelCourse;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
