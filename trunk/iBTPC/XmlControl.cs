@@ -163,10 +163,10 @@ namespace iBTPC
             foreach (XmlNode n in list)
             {
                 XmlElement stuEle = doc.CreateElement("Student");
-                stuEle.SetAttributeNode("StuName",sinfo.stuName);
-                stuEle.SetAttributeNode("StuID",sinfo.stuID.ToString());
-                stuEle.SetAttributeNode("StuClass",sinfo.stuClass);
-                stuEle.SetAttributeNode("StuAttendence",sinfo.attendence);
+                stuEle.SetAttribute("StuName",sinfo.stuName);
+                stuEle.SetAttribute("StuID",sinfo.stuID.ToString());
+                stuEle.SetAttribute("StuClass",sinfo.stuClass);
+                stuEle.SetAttribute("StuAttendence",sinfo.attendence);
 
                 n.AppendChild(stuEle);
                 XmlElement e = (XmlElement)n;
