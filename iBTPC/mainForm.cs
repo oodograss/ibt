@@ -22,17 +22,25 @@ namespace iBTPC
         private CourseManager course;
         private StudentManager sManager;
 
+        Net net = new Net();
+        public static ComDefs.Answer answer = new ComDefs.Answer();
+        public static ComDefs.Message message = new ComDefs.Message();
+        
 
         public mainForm()
         {
-            InitializeComponent();
+            InitializeComponent();          
 
             //初始化
-            currentCourse = "test2";
+            //currentCourse = "test2";
 
-            course = new CourseManager();
-            sManager = new StudentManager(currentCourse);
+            //course = new CourseManager();
+            //sManager = new StudentManager(currentCourse);
 
+            net.CommuThreadStart();
+            System.Threading.Thread listenThread = new System.Threading.Thread(new System.Threading.ThreadStart(ListenThreadFunc));
+            listenThread.IsBackground = true;
+            listenThread.Start();
         }
 
 #region 公共部分 暂时不修改
@@ -57,7 +65,7 @@ namespace iBTPC
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 2)
+            if (tabControl1.SelectedIndex == 2 || tabControl1.SelectedIndex == 3)
             {
                 dataGridView1.Visible = false;
             }
@@ -201,12 +209,6 @@ namespace iBTPC
 
         }
 
-
-
-
-        Communication commu = new Communication();
-        Net net = new Net();
-
         private void button33_Click(object sender, EventArgs e)
         {
             //学生管理
@@ -216,15 +218,12 @@ namespace iBTPC
 
             ComDefs.studentInfo sinfo = new ComDefs.studentInfo();
 
-            sinfo.stuName = "杨涛";
-            sinfo.stuID = 2006013250;
+            sinfo.stuName = "白易元";
+            sinfo.stuID = 2006013219;
             sinfo.stuClass = "软件62";
-            sinfo.attendence = "10111";
+            sinfo.attendence = "10101";
 
-            if (!sManager.addStudent(sinfo))
-            {
-                MessageBox.Show(this, "该学生已存在，请检查输入");
-            }
+            sManager.addStudent(sinfo);
         }
 #endregion
 
@@ -233,6 +232,7 @@ namespace iBTPC
 /************************************************************************/
 
 #region 课堂互动 by wucs32
+
         BluetoothDeviceInfo[] bluetoothDeviceInfo = { };
         // 连接网络
         private void button1_Click(object sender, EventArgs e)
@@ -240,31 +240,8 @@ namespace iBTPC
             String s = "正在搜寻中...";
             label10.Text = s;
             Cursor.Current = Cursors.WaitCursor;
-            int searchTimes = 0;
-            while (bluetoothDeviceInfo.Length == 0 && searchTimes < 4)
-            {
-                bluetoothDeviceInfo = commu.Search();
-                searchTimes++;
-            }
-            if (bluetoothDeviceInfo.Length == 0)
-            {
-                s = "未找到任何蓝牙设备";
-                label9.Text = s;
-                return;
-            }
-
-            for (int i = 0; i < bluetoothDeviceInfo.Length; i++)
-            {
-                if (bluetoothDeviceInfo[i].DeviceAddress.ToString() != "0017E5448609")
-                {
-                    continue;
-                }
-                commu.UpdateRoute(bluetoothDeviceInfo[i], bluetoothDeviceInfo[i].DeviceAddress.ToString());
-                BluetoothAddress Addr = (BluetoothAddress.Parse(bluetoothDeviceInfo[i].DeviceAddress.ToString()));
-                s = bluetoothDeviceInfo[i].DeviceName + commu.ConnectTest(Addr) + " - OK";
-                label10.Text = label9.Text;
-                label9.Text = s;
-            }
+            s = net.Search();
+            label9.Text = s;                
             Cursor.Current = Cursors.Default;
         }
 
@@ -273,34 +250,82 @@ namespace iBTPC
          * */
         private void button5_Click(object sender, EventArgs e)
         {
-            string DestAddr = bluetoothDeviceInfo[0].DeviceAddress.ToString();
             string content = richTextBox1.Text.Trim();
-
-            commu.Send(DestAddr, net.makeExer(content));
+            ComDefs.Exercise exer = net.makeExer(content);
+            net.SendExercise(exer);
         }
 
-        string sTemp = "";
+        delegate void deleInvokee();
+        private void RecvMessage()
+        {
+            if (this.InvokeRequired)
+            {
+                deleInvokee callback = new deleInvokee(RecvMessage);
+                this.Invoke(callback, new object[] { });
+            }
+            else
+            {
+                ListItem item = new ListItem();
+                item.id = listBox1.Items.Count;
+                item.name = message.userID + ":" + message.msg;
+                listBox1.Items.Add(item);
+            }
+        }
+
+        public void RecvAnswer()
+        {
+            if (this.InvokeRequired)
+            {
+                deleInvokee callback = new deleInvokee(RecvAnswer);
+                this.Invoke(callback, new object[] { });
+            }
+            else
+            {
+                dataGridView1.Rows.Add();
+                dataGridView1.Rows[0].Cells[0].Value = dataGridView1.RowCount.ToString();
+                dataGridView1.Rows[0].Cells[2].Value = answer.userID;
+                dataGridView1.Rows[0].Cells[3].Value = answer.exerID;
+                dataGridView1.Rows[0].Cells[4].Value = answer.ansr;                
+                richTextBox2.Text += answer.userID + ":" + answer.exerID + "-" + answer.ansr;
+            }
+        }
+
+        private void ListenThreadFunc()
+        {
+            int result = -1;
+            while (true)
+            {
+                result = net.RecvMessage();
+                switch (result)
+                {
+                    case 2:
+                        RecvAnswer();
+                        break;
+                    case 3:
+                        RecvMessage();
+                        break;
+                    default:
+                        break;
+                }
+                Thread.Sleep(200);
+            } 
+        }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
-            bool flag = true;
-            if (!BluetoothRadio.IsSupported && flag)
+            string s = net.CheckDevice();
+            if (s != "")
             {
-                MessageBox.Show("No bluetooth device is supported! Please restart the program and make sure your bluetooth device is in service.");
-                flag = false;
+                MessageBox.Show(s, "蓝牙设备状态", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
             }
-            else if (!flag)
+            s = label6.Text;
+            if (net.nodeExistNum.ToString() != s.Substring(label6.Text.IndexOf(':')))
             {
-                flag = true;
-            }
-            if (Communication.reciStr != sTemp)
-            {
-                sTemp = Communication.reciStr;
-                Net.Content exer = net.getContent(sTemp);
-                richTextBox1.Text += "\r" + exer.title;
+                label6.Text = s.Substring(0, s.IndexOf(':')+1) + net.nodeExistNum.ToString();
             }
         }
-    #endregion
 
+#endregion
 
     }
 }

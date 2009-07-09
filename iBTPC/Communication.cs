@@ -9,6 +9,7 @@ using InTheHand.Net.Bluetooth;
 using System.Threading;
 using System.Net.Sockets;
 using System.Xml;
+using System.IO;
 using System.Windows.Forms;
 
 namespace iBTPC
@@ -27,6 +28,7 @@ namespace iBTPC
         const int MAXCHANNELNUM = 8;
         const int MAX_PATH = 128;
         const string XMLFILE_PATH = "./BTRouteInfo.xml";
+        const string INIFILE_PATH = "./BTRoutInfo.ini";
 
         public static String reciStr = "";
 
@@ -43,7 +45,7 @@ namespace iBTPC
         const string TYPE_CHECKIN = "110";
         const string TYPE_JOINQUERY = "111";
         const string TYPE_JOINREPLY = "112";
-        
+
 
         private Guid DNservice = BluetoothService.DialupNetworking;
         private BluetoothClient[] bluetoothClient = new BluetoothClient[MAXCHANNELNUM + 1];
@@ -79,15 +81,6 @@ namespace iBTPC
 
         private Boolean Init()
         {
-            if (!BluetoothRadio.IsSupported)
-            {
-                MessageBox.Show("No bluetooth device is supported!");
-                return false;
-            }
-
-            LocalAddress = BluetoothRadio.PrimaryRadio.LocalAddress.ToString();
-            LocalName = BluetoothRadio.PrimaryRadio.Name;
-
             NodeStatus = 0;
             MessageSeqID = 1;
             LocalHop = 999;
@@ -105,24 +98,31 @@ namespace iBTPC
                 bluetoothClient[i] = new BluetoothClient();
             }
 
-                XmlTextWriter tw = new XmlTextWriter(XMLFILE_PATH, null);
-                tw.WriteStartDocument();
-                tw.WriteStartElement("Bluetooth_RouteInformation");
-                tw.WriteEndElement();
-                tw.WriteEndDocument();
-                tw.Flush();
-                tw.Close();
+            XmlTextWriter tw = new XmlTextWriter(XMLFILE_PATH, null);
+            tw.WriteStartDocument();
+            tw.WriteStartElement("Bluetooth_RouteInformation");
+            tw.WriteEndElement();
+            tw.WriteEndDocument();
+            tw.Flush();
+            tw.Close();
+
+            if (!BluetoothRadio.IsSupported)
+            {
+                return false;
+            }
+            LocalAddress = BluetoothRadio.PrimaryRadio.LocalAddress.ToString();
+            LocalName = BluetoothRadio.PrimaryRadio.Name;
             BluetoothDeviceInfo deviceInfo = new BluetoothDeviceInfo(BluetoothAddress.Parse(LocalAddress));
             deviceInfo.DeviceName = LocalName;
             UpdateRouteinfo(deviceInfo, LocalAddress);
             return true;
         }
 
-        // Search all the bluetooth device and return the device infomation
+        // Search all the bluetooth device and return the device information
         public BluetoothDeviceInfo[] Search()
         {
             BluetoothRadio.PrimaryRadio.Mode = RadioMode.Discoverable;
-            BluetoothDeviceInfo[] bluetoothDeviceInfo = { };
+            BluetoothDeviceInfo[] bluetoothDeviceInfo = new BluetoothDeviceInfo[]{};
             bluetoothDeviceInfo = bluetoothClient[MAXCHANNELNUM].DiscoverDevices(20);
             return bluetoothDeviceInfo;
         }
@@ -195,8 +195,8 @@ namespace iBTPC
             }
         }
 
-        public String Connect(BluetoothAddress Addr)
-        {            
+        public bool Connect(BluetoothAddress Addr)
+        {
             int i;
             for (i = 0; i < MAXCHANNELNUM; i++)
             {
@@ -216,11 +216,11 @@ namespace iBTPC
             {
                 //bluetoothClient[0] = new BluetoothClient();
                 //bluetoothClient[0].Connect(new BluetoothEndPoint(Addr, ServiceName[i]));                
-                return "Connect Fail!";
+                return false;
             }
             else
             {
-                return "Connected at Channel: " + (i).ToString();
+                return true;
             }
         }
 
@@ -248,7 +248,7 @@ namespace iBTPC
                     fr.DestAddr = DownstreamDevice[i].ToString();
                     string Msg = EncodeMsg(fr);
                     if (!SendMessage(Msg))
-                        MessageBox.Show("SendMsg Fail!");
+                        MessageBox.Show("SendMsg to channel "+i+" Fail!");
                 }
             }
         }
@@ -657,58 +657,10 @@ namespace iBTPC
         }
         */
 
-        private void GetDeviceList(string DeviceListStr)
-        {
-            int pos1 = DeviceListStr.IndexOf("(");
-            int pos2 = DeviceListStr.IndexOf(")");
-            DataTable DataTable1 = new DataTable();
-            DataTable1.Columns.Add("DeviceName");
-            DataTable1.Columns.Add("DeviceAddress");
-            string DeviceName, DeviceAddr;
-            while (pos1 >= 0 && pos2 >= 0)
-            {
-
-                DeviceName = DeviceListStr.Substring(pos1 + 1, pos2 - pos1 - 1);
-                pos1 = DeviceListStr.IndexOf("<", pos2);
-                pos2 = DeviceListStr.IndexOf(">", pos2);
-                DeviceAddr = DeviceListStr.Substring(pos1 + 1, pos2 - pos1 - 1);
-                DataRow DataRow1 = DataTable1.NewRow();
-                DataRow1["DeviceName"] = DeviceName;
-                DataRow1["DeviceAddress"] = DeviceAddr;
-                if (DeviceAddr != LocalAddress)
-                    DataTable1.Rows.Add(DataRow1);
-                pos1 = DeviceListStr.IndexOf("(", pos2);
-                pos2 = DeviceListStr.IndexOf(")", pos2);
-            }
-//             if (comboBox1.InvokeRequired)
-//             {
-//                 try
-//                 {
-//                     deleInvokee a1 = new deleInvokee(GetDeviceList);
-//                     Invoke(a1, new object[] { DeviceListStr });//执行唤醒操作
-//                 }
-//                 catch (Exception ex)
-//                 { }
-//             }
-//             else
-//             {
-//                 comboBox1.DataSource = DataTable1;
-//                 comboBox1.DisplayMember = "DeviceName";
-//                 comboBox1.ValueMember = "DeviceAddress";
-//                 comboBox1.Focus();
-//             }
-        }
-
-        //For testing
-        public void UpdateRoute(BluetoothDeviceInfo DeviceInfo, string NextHopAddress)
-        {
-            UpdateRouteinfo(DeviceInfo, NextHopAddress);
-        }
-
         /* 
          * Update the route infomation, which is recorded in the Xml document of root "XMLFILE_PATH"
          * */
-        private void UpdateRouteinfo(BluetoothDeviceInfo DeviceInfo, string NextHopAddress)
+        public void UpdateRouteinfo(BluetoothDeviceInfo DeviceInfo, string NextHopAddress)
         {
             XmlDocument doc = new XmlDocument();
             try
@@ -768,11 +720,9 @@ namespace iBTPC
             bluetoothListener[chanID] = new BluetoothListener(ServiceName[chanID]);
             bluetoothListener[chanID].Start();
             reciStr = RecvMessage(bluetoothListener[chanID], chanID, MAXMESSAGESIZE);
-            //if (str != "") pri(str);
             while (listening)
             {
                 reciStr = RecvMessage(bluetoothListener[chanID], chanID, MAXMESSAGESIZE);
-                //if (str != "") pri(str);
             }
         }
 
@@ -798,7 +748,7 @@ namespace iBTPC
                 bluetoothListener[i].Stop();
             }
         }
-       
+
         private void ClusteFormation()
         {
             Cursor.Current = Cursors.WaitCursor;
@@ -924,6 +874,131 @@ namespace iBTPC
             Cursor.Current = Cursors.Default;
         }
 
+        private void GetDeviceList(string DeviceListStr)
+        {
+            int pos1 = DeviceListStr.IndexOf("(");
+            int pos2 = DeviceListStr.IndexOf(")");
+            DataTable dataTable = new DataTable();
+            dataTable.Columns.Add("DeviceName");
+            dataTable.Columns.Add("DeviceAddress");
+            string DeviceName, DeviceAddr;
+            while (pos1 >= 0 && pos2 >= 0)
+            {
+
+                DeviceName = DeviceListStr.Substring(pos1 + 1, pos2 - pos1 - 1);
+                pos1 = DeviceListStr.IndexOf("<", pos2);
+                pos2 = DeviceListStr.IndexOf(">", pos2);
+                DeviceAddr = DeviceListStr.Substring(pos1 + 1, pos2 - pos1 - 1);
+                DataRow dataRow = dataTable.NewRow();
+                dataRow["DeviceName"] = DeviceName;
+                dataRow["DeviceAddress"] = DeviceAddr;
+                if (DeviceAddr != LocalAddress)
+                    dataTable.Rows.Add(dataRow);
+                pos1 = DeviceListStr.IndexOf("(", pos2);
+                pos2 = DeviceListStr.IndexOf(")", pos2);
+            }
+        }
+
+        private void RecordRouteInfo(DataTable dataTale)
+        {
+            FileStream fsRouteInfoFile = new FileStream(INIFILE_PATH, FileMode.Create, FileAccess.Write);
+            StreamWriter swRouteInfoFile = new StreamWriter(fsRouteInfoFile);
+
+            for (int i=0;i<dataTale.Rows.Count;i++)
+            {
+                //fsRouteInfoFile.Seek(0, SeekOrigin.Begin);
+                swRouteInfoFile.WriteLine(dataTale.Rows[i]["DeviceName"].ToString().PadRight(20, ' ') + dataTale.Rows[i]["DeviceAddress"].ToString());
+            }            
+            swRouteInfoFile.Flush();
+            fsRouteInfoFile.Close();
+        }
+
+        private void Initialize()
+        {
+            NodeStatus = 3; // root noded
+            BluetoothRadio.PrimaryRadio.Mode = RadioMode.Discoverable;
+            Cursor.Current = Cursors.WaitCursor;
+            BluetoothDeviceInfo[] bluetoothDeviceInfo = { };
+            bluetoothDeviceInfo = bluetoothClient[MAXCHANNELNUM].DiscoverDevices(8);
+            int chanID = 1;
+            for (int i = 0; i < bluetoothDeviceInfo.Length && chanID < 6; i++) // channel 0 is reserved. 6 is for Test!!!
+            {
+                try
+                {
+                    bluetoothClient[chanID].Dispose();
+                    bluetoothClient[chanID] = new BluetoothClient();
+                    bluetoothClient[chanID].Connect(new BluetoothEndPoint(bluetoothDeviceInfo[i].DeviceAddress, ServiceName[chanID]));
+                    DownstreamDevice[chanID] = new BluetoothAddress(bluetoothDeviceInfo[i].DeviceAddress.ToByteArray());
+                    BluetoothDeviceInfo deviceInfo = new BluetoothDeviceInfo(DownstreamDevice[chanID]);
+                    deviceInfo.DeviceName = bluetoothDeviceInfo[i].DeviceName;
+                    UpdateRouteinfo(deviceInfo, bluetoothDeviceInfo[i].DeviceAddress.ToString());
+                    chanID++;
+                }
+                catch (Exception ex)
+                { }
+            }
+            Frame fr;
+            fr.MsgType = TYPE_ROUTEQUERY;
+            fr.DestAddr = "000000000000";
+            fr.SrcAddr = LocalAddress;
+            LocalHop = 0;
+            fr.SeqNum = String.Format("{0:D3}", LocalHop);
+            fr.Content = LocalName;
+            BroadcastMessage2(fr);
+        }
+
+        private void GetNetTopo()
+        {
+            Frame fr;
+            fr.MsgType = TYPE_ROUTEINFOQUERY;
+            fr.DestAddr = "000000000000";
+            fr.SrcAddr = LocalAddress;
+            fr.SeqNum = String.Format("{0:D3}", 0);
+            fr.Content = "";
+            BroadcastMessage2(fr);
+        }
+
+
+        private void Proclamation()
+        {
+            XmlDocument doc = new XmlDocument();
+            try
+            {
+                doc.Load(XMLFILE_PATH);
+            }
+            catch (XmlException ex)
+            {
+                MessageBox.Show(ex.Message);
+                return;
+            }
+            string DevicelistStr = "";
+            XmlNodeList DeviceList = doc.DocumentElement.ChildNodes;
+
+            foreach (XmlElement node in DeviceList)
+            {
+                XmlNodeList subList = node.ChildNodes;
+                for (int i = 0; i < subList.Count; i++)
+                {
+                    if (subList[i].Name.CompareTo("Name") == 0)
+                    {
+                        DevicelistStr = DevicelistStr + "(" + subList[i].InnerText + ")";
+                    }
+                    else if (subList[i].Name.CompareTo("Address") == 0)
+                    {
+                        DevicelistStr = DevicelistStr + "<" + subList[i].InnerText + ">";
+                    }
+                }
+            }
+
+            Frame newfr = new Frame();
+            newfr.MsgType = TYPE_DEVICELIST;
+            newfr.DestAddr = "000000000000";
+            newfr.SrcAddr = LocalAddress;
+            newfr.SeqNum = String.Format("{0:D3}", 0);
+            newfr.Content = DevicelistStr;
+            BroadcastMessage2(newfr);
+            
+        }
         public void Send(string DestAddr, string content)
         {
             Frame fr = new Frame();
@@ -938,7 +1013,18 @@ namespace iBTPC
             else
                 MessageSeqID++;
         }
-#endregion
+
+        public void Broadcast(string content)
+        {
+            Frame fr = new Frame();
+            fr.MsgType = TYPE_BROADCAST;
+            fr.SeqNum = String.Format("{0:D3}", MessageSeqID);
+            fr.SrcAddr = LocalAddress;
+            fr.DestAddr = "000000000000";
+            fr.Content = content;
+            BroadcastMessage(fr);
+        }
+        #endregion
     }
 
-}        
+}
